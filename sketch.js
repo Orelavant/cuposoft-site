@@ -34,7 +34,9 @@ function createDotArr(numberOfDots, height, diameter) {
 
 function dots(dotArr) {
   for (let dot of dotArr) {
-    fill("white");
+    let c = color(0, 0, 0, 25);
+    fill(c);
+    stroke(c);
     strokeWeight(2);
     circle(dot.x, dot.h, dot.d);
   }
@@ -53,6 +55,7 @@ function wave(dotArr, accel, amplitude) {
 
     // draw dots
     fill("black");
+    stroke("black");
     strokeWeight(2);
     circle(dot.x, dot.h + sinValue, dot.d);
 
