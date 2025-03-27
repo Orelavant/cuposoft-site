@@ -10,12 +10,29 @@ function draw() {
   // params
   let numberOfDots = 100;
   let height = windowHeight / 2;
-  let dotSize = 5;
+  let diameter = 5;
+  let accel = 0.01;
+  let amplitude = 40;
+  textSize(32);
 
   // draw dots
   for (let i = 0; i <= numberOfDots; i++) {
+    // point 1 for line
     let x = windowWidth / numberOfDots * i;
+    let sinValue = sin((frameCount + x) * accel) * amplitude;
+
+    // point 2 for line
+    let x1 = windowWidth / numberOfDots * (i + 1);
+    let sinValue1 = sin((frameCount + x1) * accel) * amplitude;
+
+    // draw wave
+    // draw dots
     fill("black");
-    circle(x, height, dotSize);
+    strokeWeight(3);
+    circle(x, height + sinValue, diameter);
+
+    // draw line
+    // strokeWeight(6);
+    // line(x, height + sinValue, x1, height + sinValue1);
   }
 }
