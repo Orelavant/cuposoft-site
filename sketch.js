@@ -4,9 +4,11 @@ let waveAccel = 0.01;
 let amplitude = 50;
 let dotDivisor = 25;
 let heightDivisor = 2;
+let boatWidth = 100;
+let boatHeight = 100;
 let boatAccel = 1;
-let boatStartOffset = 120;
-let boatEndOffset = 250;
+let boatStartOffset = 100;
+let boatEndOffset = 200;
 let boatMinPitch = -0.5;
 let boatMaxPitch = 0.5;
 let height;
@@ -31,7 +33,7 @@ function draw() {
 
   let x = ((frameCount * boatAccel) % (windowWidth + boatEndOffset)) - boatStartOffset;
   wave(dotArr, waveAccel, amplitude);
-  boat(x, height, 100, 100, waveAccel, amplitude);
+  boat(x, height, boatWidth, boatHeight, waveAccel, amplitude);
 }
 
 function flag() {
