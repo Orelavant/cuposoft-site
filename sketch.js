@@ -1,10 +1,10 @@
 let numberOfDots;
-let diameter = 2;
-let accel = 0.01;
+let diameter = 5;
+let waveAccel = 0.01;
 let amplitude = 50;
-let dotDivisor = 1;
+let dotDivisor = 25;
 let heightDivisor = 2;
-let boatAccel = 1;
+let boatAccel = 0.5;
 let boatMinPitch = -0.5;
 let boatMaxPitch = 0.5;
 let height;
@@ -26,13 +26,10 @@ function draw() {
   background(255, 246, 211);
 
   // dots(dotArr);
-  // amplitude += random(-100, 100);
 
-
-  let i = ceil(((frameCount * boatAccel) % numberOfDots));
-  let x = dotArr[i].x;
-  wave(dotArr, accel, amplitude);
-  boat(x, height, 100, 100, accel, amplitude);
+  let x = frameCount * boatAccel;
+  wave(dotArr, waveAccel, amplitude);
+  boat(x, height, 100, 100, waveAccel, amplitude);
 }
 
 function flag() {
@@ -43,11 +40,11 @@ function flag() {
   triangle(windowWidth / 2 - 50, windowHeight / 2 - 25, windowWidth / 2 - 50, windowHeight / 2 + 25, windowWidth / 2 - 100, windowHeight / 2);
 }
 
-function boat(x, y, width, height, accel, amplitude) { 
+function boat(x, y, width, height, waveAccel, amplitude) { 
   // vars
-  let sinHeight = sin((frameCount + x) * accel) * amplitude;
+  let sinHeight = sin((frameCount + x) * waveAccel) * amplitude;
   let localHeight = -50;
-  let sinRotate = sin(((frameCount + x)* accel) + PI / 2);
+  let sinRotate = sin(((frameCount + x)* waveAccel) + PI / 2);
   let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
 
   push();
@@ -91,16 +88,16 @@ function dots(dotArr) {
   }
 }
 
-function wave(dotArr, accel, amplitude) {
+function wave(dotArr, waveAccel, amplitude) {
   for (let i = 0; i < dotArr.length - 1; i++) {
     let dot = dotArr[i];
 
     // point 1 for line
-    let sinValue = sin((frameCount + dot.x) * accel) * amplitude;
+    let sinValue = sin((frameCount + dot.x) * waveAccel) * amplitude;
 
     // point 2 for line
     let x1 = windowWidth / numberOfDots * (i + 1);
-    let sinValue1 = sin((frameCount + x1) * accel) * amplitude;
+    let sinValue1 = sin((frameCount + x1) * waveAccel) * amplitude;
 
     // draw dots
     fill("black");
