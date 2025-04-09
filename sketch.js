@@ -1,12 +1,20 @@
 let numberOfDots;
-let diameter = 8;
+let diameter = 2;
 let accel = 0.01;
-let amplitude = 40;
-let dotDivisor = 50
+let amplitude = 50;
+let dotDivisor = 1;
 let heightDivisor = 2;
+let boatAccel = 1;
+let boatMinPitch = -0.5;
+let boatMaxPitch = 0.5;
 let height;
 let dotArr;
 
+// Todo make the wave interactible?
+// Todo make the rotation of the boat dependent on the nearest set of points?
+// Todo make the amplitude vary over time, which means you need to track the amplitude of individual dots
+// Todo make the boat transition more seamless
+// Todo make the boat slow down over humps and accelerate down the slope
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -18,10 +26,13 @@ function draw() {
   background(255, 246, 211);
 
   // dots(dotArr);
-  var x = dotArr[floor(dotArr.length / 2)].x;
-  var y = dotArr[floor(dotArr.length / 2)].y;
-  semicircle(x, y, 100, 100, accel, amplitude);
+  // amplitude += random(-100, 100);
+
+
+  let i = ceil(((frameCount * boatAccel) % numberOfDots));
+  let x = dotArr[i].x;
   wave(dotArr, accel, amplitude);
+  boat(x, height, 100, 100, accel, amplitude);
 }
 
 function flag() {
@@ -32,20 +43,30 @@ function flag() {
   triangle(windowWidth / 2 - 50, windowHeight / 2 - 25, windowWidth / 2 - 50, windowHeight / 2 + 25, windowWidth / 2 - 100, windowHeight / 2);
 }
 
-function semicircle(x, y, width, height, accel, amplitude) { 
-  fill(255, 246, 211);
-  stroke(0);
-  strokeWeight(2);
+function boat(x, y, width, height, accel, amplitude) { 
+  // vars
+  let sinHeight = sin((frameCount + x) * accel) * amplitude;
+  let localHeight = -50;
+  let sinRotate = sin(((frameCount + x)* accel) + PI / 2);
+  let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
+
   push();
     // Translate the origin to the center of the semicircle
-    translate(x, y);
+    translate(x, y + sinHeight);
 
-    // Apply rotation
-    rotate(sin(frameCount * accel)) * amplitude;
+    // Rotate boat
+    rotate(sinRotateNorm);
 
-    // Draw the semicircle and line relative to the new origin
-    arc(0, 0, width, height, 0, PI);
-    line(-width / 2, 0, width / 2, 0);
+    // Draw the hull
+    fill(255, 246, 211);
+    stroke(0);
+    strokeWeight(2);
+    arc(0, localHeight, width, height, 0, PI);
+    line(-width / 2, localHeight, width / 2, localHeight);
+
+    // Draw the flag pole
+
+    // Draw the flag
   pop();
 }
 
