@@ -17,16 +17,44 @@ function init() {
 function draw() {
   background(255, 246, 211);
 
-  dots(dotArr);
+  // dots(dotArr);
+  var x = dotArr[floor(dotArr.length / 2)].x;
+  var y = dotArr[floor(dotArr.length / 2)].y;
+  semicircle(x, y, 100, 100, accel, amplitude);
   wave(dotArr, accel, amplitude);
 }
 
-function createDotArr(numberOfDots, height, diameter) {
+function flag() {
+  // A triangle flag pointing to the left hanging on the top of a pole
+  fill(255, 246, 211);
+  stroke(0);
+  strokeWeight(2);
+  triangle(windowWidth / 2 - 50, windowHeight / 2 - 25, windowWidth / 2 - 50, windowHeight / 2 + 25, windowWidth / 2 - 100, windowHeight / 2);
+}
+
+function semicircle(x, y, width, height, accel, amplitude) { 
+  fill(255, 246, 211);
+  stroke(0);
+  strokeWeight(2);
+  push();
+    // Translate the origin to the center of the semicircle
+    translate(x, y);
+
+    // Apply rotation
+    rotate(sin(frameCount * accel)) * amplitude;
+
+    // Draw the semicircle and line relative to the new origin
+    arc(0, 0, width, height, 0, PI);
+    line(-width / 2, 0, width / 2, 0);
+  pop();
+}
+
+function createDotArr(numberOfDots, y, diameter) {
   let dotArr = [];
 
   for (let i = 0; i <= numberOfDots; i++) {
     let x = windowWidth / numberOfDots * i;
-    dotArr.push({"x" : x, "h" : height, "d" : diameter});
+    dotArr.push({"x" : x, "y" : y, "d" : diameter});
   }
 
   return dotArr;
@@ -36,9 +64,9 @@ function dots(dotArr) {
   for (let dot of dotArr) {
     let c = color(0, 0, 0, 25);
     fill(c);
-    stroke(c);
+    noStroke();
     strokeWeight(2);
-    circle(dot.x, dot.h, dot.d);
+    circle(dot.x, dot.y, dot.d);
   }
 }
 
@@ -55,9 +83,9 @@ function wave(dotArr, accel, amplitude) {
 
     // draw dots
     fill("black");
-    stroke("black");
+    noStroke();
     strokeWeight(2);
-    circle(dot.x, dot.h + sinValue, dot.d);
+    circle(dot.x, dot.y + sinValue, dot.d);
 
     // draw line
     // strokeWeight(6);
