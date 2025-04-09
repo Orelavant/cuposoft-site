@@ -4,7 +4,7 @@ let waveAccel = 0.01;
 let amplitude = 50;
 let dotDivisor = 25;
 let heightDivisor = 2;
-let boatAccel = 0.5;
+let boatAccel = 1;
 let boatMinPitch = -0.5;
 let boatMaxPitch = 0.5;
 let height;
@@ -27,7 +27,7 @@ function draw() {
 
   // dots(dotArr);
 
-  let x = frameCount * boatAccel;
+  let x = (frameCount * boatAccel) % windowWidth;
   wave(dotArr, waveAccel, amplitude);
   boat(x, height, 100, 100, waveAccel, amplitude);
 }
@@ -70,7 +70,7 @@ function boat(x, y, width, height, waveAccel, amplitude) {
 function createDotArr(numberOfDots, y, diameter) {
   let dotArr = [];
 
-  for (let i = 0; i <= numberOfDots; i++) {
+  for (let i = 0; i <= numberOfDots + 1; i++) {
     let x = windowWidth / numberOfDots * i;
     dotArr.push({"x" : x, "y" : y, "d" : diameter});
   }
