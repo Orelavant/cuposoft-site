@@ -8,8 +8,8 @@ let boatWidth = 100;
 let boatHeight = 100;
 let boatSpeed = 1;
 let boatStartOffset = 100;
-let boatEndOffset = 200;
-let boatX = 0;
+let boatEndOffset = 100;
+let boatX = -boatStartOffset;
 let boatMinPitch = -0.55;
 let boatMaxPitch = 0.55;
 let height;
@@ -32,20 +32,13 @@ function draw() {
 
   // dots(dotArr);
 
-  // Vary the acceleration of the boat by a sin wave
-  // let speed = map(sin(frameCount * waveAccel), -1, 1, 0, 1);
-  boatX = ((boatX + boatSpeed) % (windowWidth + boatEndOffset));
-  text(boatSpeed, 100, 100);
+  boatX = boatX + boatSpeed;
+  if (boatX >= windowWidth + boatEndOffset) {
+    boatX = -boatStartOffset;
+  }
+
   wave(dotArr, waveAccel, amplitude);
   boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
-}
-
-function flag() {
-  // A triangle flag pointing to the left hanging on the top of a pole
-  fill(255, 246, 211);
-  stroke(0);
-  strokeWeight(2);
-  triangle(windowWidth / 2 - 50, windowHeight / 2 - 25, windowWidth / 2 - 50, windowHeight / 2 + 25, windowWidth / 2 - 100, windowHeight / 2);
 }
 
 function boat(x, y, width, height, waveAccel, amplitude) { 
@@ -55,7 +48,7 @@ function boat(x, y, width, height, waveAccel, amplitude) {
   let sinRotate = sin(((frameCount + x) * waveAccel) + PI / 2);
   let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
   if (sinRotateNorm < 0) {
-    boatSpeed = max(0.3, boatSpeed - waveAccel * 1.4);
+    boatSpeed = max(0.4, boatSpeed - waveAccel * 1.4);
   } else if (sinRotateNorm > 0) {  
     boatSpeed = min(2, boatSpeed + waveAccel * 1.4);
   };
@@ -72,13 +65,20 @@ function boat(x, y, width, height, waveAccel, amplitude) {
     stroke(0);
     strokeWeight(2);
     arc(0, localHeight, width, height, 0, PI);
-    line(-width / 2, localHeight, width / 2, localHeight);
+    arc(0, localHeight, width, (height / 8) + sinRotate * 15, PI, 0);
+    noFill()
+    arc(0, localHeight, width, (height / 4) + sinRotate * 15, 0, PI);
 
     // Draw the flag pole
-    strokeWeight(2);
-    line(width / 2, -50, width / 2, -100);
+    line(width / 2, -50, width / 2, -80);
+    line(width / 2 - 5, -50 + map(sinRotate, -1, 1, 0, -5), width / 2 - 5, -80);
 
     // Draw the flag
+    translate(width / 2, -80);
+    fill(255, 246, 211);
+    line(-35, -20, -35, -15);
+    triangle(0, 0, 0, -25, -35, -20);
+    triangle(0, 0, 0, -25, -35, -15);
   pop();
 }
 
