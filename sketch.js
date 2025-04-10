@@ -64,10 +64,18 @@ function boat(x, y, width, height, waveAccel, amplitude) {
     // Rotate boat
     rotate(sinRotateNorm);
 
-    // Draw the cup hull
+    // Set pencil
     fill(255, 246, 211);
     stroke(0);
     strokeWeight(2);
+
+    // Draw the flag pole
+    // Far pole
+    line(width / 2, -50, width / 2, -80);
+    // Near pole
+    line(width / 2 - 5, -50 + map(sinRotate, -1, 1, 0, -5), width / 2 - 5, -100);
+
+    // Draw the cup hull
     arc(0, localHeight, width, height, 0, PI);
     // Top lip
     arc(0, localHeight, width, (height / 8) + sinRotate * 15, PI, 0);
@@ -75,20 +83,18 @@ function boat(x, y, width, height, waveAccel, amplitude) {
     noFill()
     arc(0, localHeight, width, (height / 8) + sinRotate * 15, 0, PI);
 
-    // Draw the flag pole
-    // Far pole
-    line(width / 2, -50, width / 2, -80);
-    // Near pole
-    line(width / 2 - 5, -50 + map(sinRotate, -1, 1, 0, -5), width / 2 - 5, -80);
-
     // Draw the flag
     translate(width / 2, -80);
     fill(255, 246, 211);
-    line(-35, -20, -35, -15);
     // Back flag
-    triangle(0, 0, 0, -25, -35, -20);
+    line(-35, -20, 0, -25);
     // Front flag
     triangle(0, 0, 0, -25, -35, -15);
+    // Connecting line
+    line(-35, -20, -35, -15);
+
+    // Attempt at waving flag
+    // triangle(0, 0, 0, -25, -35 + map(noise(frameCount * 0.015), 0, 1, -20, 20), -15 + map(noise(frameCount * 0.015), 0, 1, -20, 20));
   pop();
 }
 
