@@ -6,19 +6,20 @@ let dotDivisor = 25;
 let heightDivisor = 2;
 let boatWidth = 100;
 let boatHeight = 100;
-let boatAccel = 1;
+let boatSpeed = 1;
 let boatStartOffset = 100;
 let boatEndOffset = 200;
-let boatMinPitch = -0.5;
-let boatMaxPitch = 0.5;
+let boatX = 0;
+let boatMinPitch = -0.55;
+let boatMaxPitch = 0.55;
 let height;
 let dotArr;
 
 // Todo make the wave interactible?
 // Todo make the rotation of the boat dependent on the nearest set of points?
 // Todo make the amplitude vary over time, which means you need to track the amplitude of individual dots
-// Todo make the boat transition more seamless
-// Todo make the boat slow down over humps and accelerate down the slope
+// Todo make the boat accel and decel based of a wave instead of linear
+// Todo add delta time
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -31,9 +32,12 @@ function draw() {
 
   // dots(dotArr);
 
-  let x = ((frameCount * boatAccel) % (windowWidth + boatEndOffset)) - boatStartOffset;
+  // Vary the acceleration of the boat by a sin wave
+  // let speed = map(sin(frameCount * waveAccel), -1, 1, 0, 1);
+  boatX = ((boatX + boatSpeed) % (windowWidth + boatEndOffset));
+  text(boatSpeed, 100, 100);
   wave(dotArr, waveAccel, amplitude);
-  boat(x, height, boatWidth, boatHeight, waveAccel, amplitude);
+  boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
 }
 
 function flag() {
@@ -48,8 +52,13 @@ function boat(x, y, width, height, waveAccel, amplitude) {
   // vars
   let sinHeight = sin((frameCount + x) * waveAccel) * amplitude;
   let localHeight = -50;
-  let sinRotate = sin(((frameCount + x)* waveAccel) + PI / 2);
+  let sinRotate = sin(((frameCount + x) * waveAccel) + PI / 2);
   let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
+  if (sinRotateNorm < 0) {
+    boatSpeed = max(0.3, boatSpeed - waveAccel * 1.4);
+  } else if (sinRotateNorm > 0) {  
+    boatSpeed = min(2, boatSpeed + waveAccel * 1.4);
+  };
 
   push();
     // Translate the origin to the center of the semicircle
@@ -66,6 +75,8 @@ function boat(x, y, width, height, waveAccel, amplitude) {
     line(-width / 2, localHeight, width / 2, localHeight);
 
     // Draw the flag pole
+    strokeWeight(2);
+    line(width / 2, -50, width / 2, -100);
 
     // Draw the flag
   pop();
