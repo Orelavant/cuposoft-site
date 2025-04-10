@@ -7,8 +7,8 @@ let heightDivisor = 2;
 let boatWidth = 100;
 let boatHeight = 100;
 let boatSpeed = 1;
-let boatStartOffset = 100;
-let boatEndOffset = 100;
+let boatStartOffset = boatWidth / 2;
+let boatEndOffset = boatWidth / 2;
 let boatX = -boatStartOffset;
 let boatMinPitch = -0.55;
 let boatMaxPitch = 0.55;
@@ -32,6 +32,7 @@ function draw() {
 
   // dots(dotArr);
 
+  // Manage boat x to wrap
   boatX = boatX + boatSpeed;
   if (boatX >= windowWidth + boatEndOffset) {
     boatX = -boatStartOffset;
