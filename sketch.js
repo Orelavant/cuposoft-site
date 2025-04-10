@@ -3,12 +3,12 @@ let diameter = 5;
 let waveAccel = 0.01;
 let amplitude = 50;
 let dotDivisor = 25;
-let heightDivisor = 2;
+let heightDivisor = 1.5;
 let boatWidth = 100;
 let boatHeight = 100;
 let boatSpeed = 1;
 let boatStartOffset = boatWidth / 2;
-let boatEndOffset = (boatWidth / 2) + 5;
+let boatEndOffset = (boatWidth / 2) + 10;
 let boatX = -boatStartOffset;
 let boatMinPitch = -0.55;
 let boatMaxPitch = 0.55;
@@ -20,6 +20,9 @@ let dotArr;
 // Todo make the amplitude vary over time, which means you need to track the amplitude of individual dots
 // Todo make the boat accel and decel based of a wave instead of linear
 // Todo add delta time
+// Todo transition isn't very smooth at start of screen when screen size is smaller
+// Todo add purple cupo at bottom of boat
+// Todo add rotation to the flag, draw flag pole behind cup
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -61,24 +64,30 @@ function boat(x, y, width, height, waveAccel, amplitude) {
     // Rotate boat
     rotate(sinRotateNorm);
 
-    // Draw the hull
+    // Draw the cup hull
     fill(255, 246, 211);
     stroke(0);
     strokeWeight(2);
     arc(0, localHeight, width, height, 0, PI);
+    // Top lip
     arc(0, localHeight, width, (height / 8) + sinRotate * 15, PI, 0);
+    // Bottom lip
     noFill()
-    arc(0, localHeight, width, (height / 4) + sinRotate * 15, 0, PI);
+    arc(0, localHeight, width, (height / 8) + sinRotate * 15, 0, PI);
 
     // Draw the flag pole
+    // Far pole
     line(width / 2, -50, width / 2, -80);
+    // Near pole
     line(width / 2 - 5, -50 + map(sinRotate, -1, 1, 0, -5), width / 2 - 5, -80);
 
     // Draw the flag
     translate(width / 2, -80);
     fill(255, 246, 211);
     line(-35, -20, -35, -15);
+    // Back flag
     triangle(0, 0, 0, -25, -35, -20);
+    // Front flag
     triangle(0, 0, 0, -25, -35, -15);
   pop();
 }
