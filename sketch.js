@@ -22,7 +22,9 @@ let dotArr;
 // Todo add delta time
 // Todo transition isn't very smooth at start of screen when screen size is smaller
 // Todo add purple cupo at bottom of boat
-// Todo add rotation to the flag, draw flag pole behind cup
+// Todo make flag flap around in the wind
+// Todo Make a little wave inside the cup that you can only see when the boat is at a certain angle (on the way down)
+// Todo make it interactible by trying to send little particles to land inside the cup, and you get more points based on the distance traveled
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
