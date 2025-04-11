@@ -7,7 +7,7 @@ let heightDivisor = 1.5;
 let boatWidth = 100;
 let boatHeight = 100;
 let boatSpeed = 1;
-let boatStartOffset = boatWidth / 2 + 30;
+let boatStartOffset = (boatWidth / 2) + 15;
 let boatEndOffset = (boatWidth / 2) + 15;
 let boatX = -boatStartOffset;
 let boatMinPitch = -0.55;
@@ -25,6 +25,8 @@ let dotArr;
 // Todo make flag flap around in the wind
 // Todo Make a little wave inside the cup that you can only see when the boat is at a certain angle (on the way down)
 // Todo make it interactible by trying to send little particles to land inside the cup, and you get more points based on the distance traveled
+// Todo the particles could stay inside and splash around inside the cup
+// The particles you throw could be minuature boats, and if they don't make it inside the cup, they sink down and dissapear offscreen
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
