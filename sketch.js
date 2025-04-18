@@ -29,6 +29,7 @@ let dotArr;
 // Todo make it interactible by trying to send little particles to land inside the cup, and you get more points based on the distance traveled
 // Todo the particles could stay inside and splash around inside the cup
 // The particles you throw could be minuature boats, and if they don't make it inside the cup, they sink down and dissapear offscreen
+// Todo the start and end of the screen for the wave should smoothly transition into one another
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -50,14 +51,14 @@ function draw() {
   }
 
   wave(dotArr, waveAccel, amplitude);
-  boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
+  boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude, true);
   push();
     scale(0.5);
-    boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
+    boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude, true);
   pop();
 }
 
-function boat(x, y, width, height, waveAccel, amplitude) { 
+function boat(x, y, width, height, waveAccel, amplitude, dynamic) { 
   // vars
   let sinHeight = sin((frameCount + x) * waveAccel) * amplitude;
   let localHeight = -50;
@@ -76,7 +77,9 @@ function boat(x, y, width, height, waveAccel, amplitude) {
     translate(x, y + sinHeight);
 
     // Rotate boat
-    rotate(sinRotateNorm);
+    if (dynamic) {
+      rotate(sinRotateNorm);
+    }
 
     // Set pencil
     fill(255, 246, 211);
@@ -91,32 +94,40 @@ function boat(x, y, width, height, waveAccel, amplitude) {
 
     // Draw the cup hull
     arc(0, localHeight, width, height, 0, PI);
-    // Top lip
-    arc(0, localHeight, width, (height / 8) + sinRotate * 15, PI, 0);
-    // Bottom lip
-    noFill()
-    arc(0, localHeight, width, (height / 8) + sinRotate * 15, 0, PI);
+    if (dynamic) {
+      // Top lip
+      arc(0, localHeight, width, (height / 8) + sinRotate * 15, PI, 0);
+      // Bottom lip
+      arc(0, localHeight, width, (height / 8) + sinRotate * 15, 0, PI);
+    } else {
+      // Top lip
+      arc(0, localHeight, width, (height / 8) + sinRotate * 15, PI, 0);
+      // Bottom lip
+      arc(0, localHeight, width, (height / 8) + sinRotate * 15, 0, PI);
+    }
 
     // Draw the flag
-    translate(width / 2, -80);
-    flagNoiseXOff += 0.01;
-    flagNoiseYOff += 0.01;
-    fill(255, 246, 211);
+    push();
+      translate(width / 2, -80);
+      flagNoiseXOff += 0.01;
+      flagNoiseYOff += 0.01;
+      fill(255, 246, 211);
 
-    // Waving implementation
-    // Back flag
-    // line(-35 + flagXOff, -20 + flagYOff, 0, -25);
-    // Front flag
-    // triangle(0, 0, 0, -25, -35 + flagXOff, -15 + flagYOff);
-    // Connecting line
-    // line(-35 + flagXOff, -20 + flagYOff, -36 + flagXOff, -15 + flagYOff);
+      // Waving implementation
+      // Back flag
+      // line(-35 + flagXOff, -20 + flagYOff, 0, -25);
+      // Front flag
+      // triangle(0, 0, 0, -25, -35 + flagXOff, -15 + flagYOff);
+      // Connecting line
+      // line(-35 + flagXOff, -20 + flagYOff, -36 + flagXOff, -15 + flagYOff);
 
-    // Back flag
-    line(-35, -20, 0, -25);
-    // Front flag
-    triangle(0, 0, 0, -25, -35,  -15);
-    // Connecting line
-    line(-35, -20, -36, -15);
+      // Back flag
+      line(-35, -20, 0, -25);
+      // Front flag
+      triangle(0, 0, 0, -25, -35,  -15);
+      // Connecting line
+      line(-35, -20, -36, -15);
+    pop();
   pop();
 }
 
