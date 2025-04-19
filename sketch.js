@@ -44,6 +44,7 @@ function draw() {
   if (boatX >= windowWidth + boatEndOffset) {
     boatX = -boatStartOffset;
   }
+  // text(boatSpeed, boatX, height - 200);
 
   wave(dotArr, waveAccel, amplitude);
   boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
@@ -56,9 +57,9 @@ function boat(x, y, width, height, waveAccel, amplitude) {
   let sinRotate = sin(((frameCount + x) * waveAccel) + PI / 2);
   let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
   if (sinRotateNorm < 0) {
-    boatSpeed = max(0.4, boatSpeed - waveAccel * 1.4);
+    boatSpeed = max(0.4, boatSpeed - waveAccel * 1.8);
   } else if (sinRotateNorm > 0) {  
-    boatSpeed = min(2, boatSpeed + waveAccel * 1.4);
+    boatSpeed = min(3, boatSpeed + waveAccel * 1.4);
   };
 
   push();
@@ -95,7 +96,7 @@ function boat(x, y, width, height, waveAccel, amplitude) {
     // Front flag
     triangle(0, 0, 0, -25, -35, -15);
     // Connecting line
-    line(-35, -20, -35, -15);
+    line(-35, -20, -36, -15);
 
     // Attempt at waving flag
     // triangle(0, 0, 0, -25, -35 + map(noise(frameCount * 0.015), 0, 1, -20, 20), -15 + map(noise(frameCount * 0.015), 0, 1, -20, 20));
