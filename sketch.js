@@ -12,6 +12,7 @@ let boatEndOffset = (boatWidth / 2) + 15;
 let boatX = -boatStartOffset;
 let boatMinPitch = -0.55;
 let boatMaxPitch = 0.55;
+let smallBoatScalar = 0.3;
 let flagNoiseXOff;
 let flagNoiseYOff;
 let height;
@@ -49,21 +50,57 @@ function draw() {
   }
 
   wave(dotArr, waveAccel, amplitude);
-  boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude, true);
+  boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
 
   if (mouseIsPressed) {
     push();
-      scale(0.3);
-      let scaledMouseX = mouseX / 0.3; // Adjust mouseX for scaling
-      let scaledMouseY = mouseY / 0.3; // Adjust mouseY for scaling
-      boat(scaledMouseX, scaledMouseY, boatWidth, boatHeight, waveAccel, amplitude, false);
+      scale(smallBoatScalar);
+      let scaledMouseX = mouseX / smallBoatScalar;
+      let scaledMouseY = mouseY / smallBoatScalar;
+      smallBoat(scaledMouseX, scaledMouseY, boatWidth, boatHeight);
     pop();
   }
-
-  circle(mouseX, mouseY, diameter * 2);
 }
 
-function boat(x, y, width, height, waveAccel, amplitude, dynamic) { 
+function smallBoat(x, y, width, height) {
+  let localHeight = -50;
+  push();
+    // Translate the origin to the center of the semicircle
+    translate(x, y);
+
+    // Set pencil
+    fill(255, 246, 211);
+    stroke(0);
+    strokeWeight(4);
+
+    // Draw the flag pole
+    // Far pole
+    line(width / 2, -50, width / 2, -80);
+    // Near pole
+    line(width / 2 - 5, -50, width / 2 - 5, -100);
+
+    // Draw the cup hull
+    arc(0, localHeight, width, height, 0, PI);
+    // Top lip
+    arc(0, localHeight, width, (height / 8), PI, 0);
+    // Bottom lip
+    arc(0, localHeight, width, (height / 8), 0, PI);
+
+    // Draw the flag
+    push();
+      translate(width / 2, -80);
+      fill(255, 246, 211);
+
+      // Back flag
+      line(-35, -20, 0, -25);
+      // Front flag
+      triangle(0, 0, 0, -25, -35,  -15);
+      // Connecting line
+      line(-35, -20, -36, -15);
+  pop();
+}
+
+function boat(x, y, width, height, waveAccel, amplitude) { 
   // vars
   let sinHeight = sin((frameCount + x) * waveAccel) * amplitude;
   let localHeight = -50;
@@ -72,9 +109,9 @@ function boat(x, y, width, height, waveAccel, amplitude, dynamic) {
   let flagXOff = map(noise(flagNoiseXOff), 0, 1, -3, 3); 
   let flagYOff = map(noise(flagNoiseYOff), 0, 1, -3, 3);
   if (sinRotateNorm < 0) {
-    boatSpeed = max(0.4, boatSpeed - waveAccel);
+    boatSpeed = max(0.3, boatSpeed - waveAccel * 1.6);
   } else if (sinRotateNorm > 0) {  
-    boatSpeed = min(2.6, boatSpeed + waveAccel);
+    boatSpeed = min(2, boatSpeed + waveAccel * 1.4);
   };
 
   push();
@@ -82,9 +119,7 @@ function boat(x, y, width, height, waveAccel, amplitude, dynamic) {
     translate(x, y + sinHeight);
 
     // Rotate boat
-    if (dynamic) {
-      rotate(sinRotateNorm);
-    }
+    rotate(sinRotateNorm);
 
     // Set pencil
     fill(255, 246, 211);
@@ -99,17 +134,10 @@ function boat(x, y, width, height, waveAccel, amplitude, dynamic) {
 
     // Draw the cup hull
     arc(0, localHeight, width, height, 0, PI);
-    if (dynamic) {
-      // Top lip
-      arc(0, localHeight, width, (height / 8) + sinRotate * 15, PI, 0);
-      // Bottom lip
-      arc(0, localHeight, width, (height / 8) + sinRotate * 15, 0, PI);
-    } else {
-      // Top lip
-      arc(0, localHeight, width, (height / 8), PI, 0);
-      // Bottom lip
-      arc(0, localHeight, width, (height / 8), 0, PI);
-    }
+    // Top lip
+    arc(0, localHeight, width, (height / 8) + sinRotate * 15, PI, 0);
+    // Bottom lip
+    arc(0, localHeight, width, (height / 8) + sinRotate * 15, 0, PI);
 
     // Draw the flag
     push();
