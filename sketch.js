@@ -50,6 +50,7 @@ function draw() {
   }
 
   wave(dotArr, waveAccel, amplitude);
+
   boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
 
   if (mouseIsPressed) {
