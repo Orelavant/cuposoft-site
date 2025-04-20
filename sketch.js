@@ -52,6 +52,7 @@ let gravity = 0.2;
 // Todo make the boats that collide with big boat shrink even more, and bob along a wave that's inside the cup
 // Todo small boats should calculate their own small sin rotate norm so that they rotate independent of the big waves
 // Todo replace the cursor with wind particles
+// Todo make a progress bar that connects between the wave dots based off of how far the small boat traveled before landing in the big boat - once it fills up, a game icon pops out of the boat, that links to an itch.io game
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
