@@ -2,6 +2,7 @@ let numberOfDots;
 let diameter = 5;
 let waveAccel = 0.01;
 let amplitude = 50;
+let smallAmplitude = 10;
 let dotDivisor = 25;
 let heightDivisor = 1.5;
 let boatWidth = 100;
@@ -15,15 +16,18 @@ let boatMaxPitch = 0.55;
 let smallBoatScalar = 0.3;
 let currentRotation = 0;
 let boatTopOffset = -50;
+let boatYSinOffset;
+let smallBoatYSinOffset;
+let sinRotate;
+let sinRotateNorm;
+let smallSinRotate;
+let smallSinRotateNorm;
 let flagNoiseXOff;
 let flagNoiseYOff;
 let height;
 let dotArr;
-let boatYSinOffset;
 let smallBoatArr = [];
 let gravity = 0.2;
-// let friction;
-// let frictionRate = 10;
 
 // Todo make the wave interactible?
 // Todo make the rotation of the boat dependent on the nearest set of points?
@@ -46,6 +50,8 @@ let gravity = 0.2;
 // Todo if released in the water, the boats should float to the top
 // Todo make boat accelerate towards mouse instead of sticking on mouse
 // Todo make the boats that collide with big boat shrink even more, and bob along a wave that's inside the cup
+// Todo small boats should calculate their own small sin rotate norm so that they rotate independent of the big waves
+// Todo replace the cursor with wind particles
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -67,6 +73,13 @@ function draw() {
     boatX = -boatStartOffset;
   }
 
+  boatYSinOffset = sin((frameCount + boatX) * waveAccel) * amplitude;
+  smallBoatYSinOffset = sin((frameCount + boatX) * waveAccel) * smallAmplitude;
+  sinRotate = sin(((frameCount + boatX) * waveAccel) + PI / 2);
+  sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
+  smallSinRotate = sin(((frameCount + boatX) * waveAccel) + PI / 2);
+  smallSinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
+
   // Angle of small boat based on the diff between x positions
   let xDiff = mouseX - pmouseX
   let targetRotation = map(xDiff, -25, 25, -PI / 2, PI / 2)
@@ -86,7 +99,7 @@ function draw() {
   }
 
   // Draw big boat
-  boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
+  boat(boatX, height, boatWidth, boatHeight, waveAccel);
 
   // Draw boats that have been released
   drawReleasedBoats();
@@ -122,13 +135,14 @@ function drawReleasedBoats() {
       smallBoat.x + ((boatWidth * smallBoatScalar) / 2) > boatX - (boatWidth / 2) 
       && smallBoat.x - ((boatWidth * smallBoatScalar) / 2) < boatX + (boatWidth / 2) 
       && smallBoat.y > height + boatYSinOffset + boatTopOffset + -30
+      && smallBoat.y < height + boatYSinOffset + boatTopOffset + 30
     ) {
       // Move small boat with big boat
       smallBoat.x = boatX + ((boatWidth * smallBoatScalar) / 2);
-      smallBoat.y = height + boatYSinOffset + boatTopOffset - 10;
+      smallBoat.y = height + + smallBoatYSinOffset + boatYSinOffset + boatTopOffset - 20;
       smallBoat.xSpeed = boatSpeed;
       smallBoat.ySpeed = 0;
-      smallBoat.rotation = currentRotation;
+      smallBoat.rotation = smallSinRotateNorm;
     }
   }
 }
@@ -193,9 +207,6 @@ function drawSmallBoat(width, height) {
 
 function boat(x, y, width, height, waveAccel, amplitude) { 
   // vars
-  boatYSinOffset = sin((frameCount + x) * waveAccel) * amplitude;
-  let sinRotate = sin(((frameCount + x) * waveAccel) + PI / 2);
-  let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
   let flagXOff = map(noise(flagNoiseXOff), 0, 1, -3, 3); 
   let flagYOff = map(noise(flagNoiseYOff), 0, 1, -3, 3);
   if (sinRotateNorm < 0) {
