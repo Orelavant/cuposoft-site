@@ -13,10 +13,13 @@ let boatX = -boatStartOffset;
 let boatMinPitch = -0.55;
 let boatMaxPitch = 0.55;
 let smallBoatScalar = 0.3;
+let currentRotation = 0;
 let flagNoiseXOff;
 let flagNoiseYOff;
 let height;
 let dotArr;
+// let friction;
+// let frictionRate = 10;
 
 // Todo make the wave interactible?
 // Todo make the rotation of the boat dependent on the nearest set of points?
@@ -31,6 +34,8 @@ let dotArr;
 // Todo the particles could stay inside and splash around inside the cup
 // The particles you throw could be minuature boats, and if they don't make it inside the cup, they sink down and dissapear offscreen
 // Todo the start and end of the screen for the wave should smoothly transition into one another
+// Todo cleanup code (make boat drawing 1 function)
+// Todo make the small boat rotate in the y direction as well
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -43,53 +48,65 @@ function init() {
 function draw() {
   background(255, 246, 211);
 
+  // Draw wave
+  wave(dotArr, waveAccel, amplitude);
+
   // Manage boat x to wrap
   boatX = boatX + boatSpeed;
   if (boatX >= windowWidth + boatEndOffset) {
     boatX = -boatStartOffset;
   }
 
-  wave(dotArr, waveAccel, amplitude);
-
+  // Draw big boat
   boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
 
+  // Angle of small boat based on the diff between x positions
+  let xDiff = mouseX - pmouseX
+  let targetRotation = map(xDiff, -25, 25, -PI / 2, PI / 2)
+  targetRotation = constrain(targetRotation, -PI / 2, PI / 2);
+
+  // Draw small boat at cursor
   if (mouseIsPressed) {
     push();
+      // Move to mouse location
+      translate(mouseX, mouseY);
+      currentRotation = currentRotation + (targetRotation - currentRotation) * 0.1
+      // print(currentRotation);
+      rotate(currentRotation);
+
+      // Draw boat
       scale(smallBoatScalar);
-      let scaledMouseX = mouseX / smallBoatScalar;
-      let scaledMouseY = mouseY / smallBoatScalar;
-      smallBoat(scaledMouseX, scaledMouseY, boatWidth, boatHeight);
+      strokeWeight(4);
+      smallBoat(boatWidth, boatHeight);
+      fill("black");
     pop();
   }
 }
 
-function smallBoat(x, y, width, height) {
-  let localHeight = -50;
+function smallBoat(width, height) {
+  // Offset from mouse so that the mouse is at the flag point
+  translate(-50, 60);
   push();
-    // Translate the origin to the center of the semicircle
-    translate(x, y);
-
     // Set pencil
     fill(255, 246, 211);
     stroke(0);
-    strokeWeight(4);
 
     // Draw the flag pole
     // Far pole
-    line(width / 2, -50, width / 2, -80);
+    line(width / 2, -50, width / 2, 0);
     // Near pole
-    line(width / 2 - 5, -50, width / 2 - 5, -100);
+    line(width / 2 - 5, -50, width / 2 - 5, 0);
 
     // Draw the cup hull
-    arc(0, localHeight, width, height, 0, PI);
+    arc(0, 0, width, height, 0, PI);
     // Top lip
-    arc(0, localHeight, width, (height / 8), PI, 0);
+    arc(0, 0, width, (height / 8), PI, 0);
     // Bottom lip
-    arc(0, localHeight, width, (height / 8), 0, PI);
+    arc(0, 0, width, (height / 8), 0, PI);
 
     // Draw the flag
     push();
-      translate(width / 2, -80);
+      translate(width / 2, -35);
       fill(255, 246, 211);
 
       // Back flag
@@ -110,7 +127,7 @@ function boat(x, y, width, height, waveAccel, amplitude) {
   let flagXOff = map(noise(flagNoiseXOff), 0, 1, -3, 3); 
   let flagYOff = map(noise(flagNoiseYOff), 0, 1, -3, 3);
   if (sinRotateNorm < 0) {
-    boatSpeed = max(0.3, boatSpeed - waveAccel * 1.6);
+    boatSpeed = max(0.2, boatSpeed - waveAccel * 1.5);
   } else if (sinRotateNorm > 0) {  
     boatSpeed = min(2, boatSpeed + waveAccel * 1.4);
   };
