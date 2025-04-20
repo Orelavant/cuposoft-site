@@ -40,6 +40,7 @@ let gravity = 0.2;
 // Todo make the small boat rotate in the y direction as well
 // Todo make it easier to give speed for boats (based on dt instead of frames)
 // Todo make boat mantain the rotation it had when you sent it
+// Todo make the boats travel a lot more slowly in the water
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
