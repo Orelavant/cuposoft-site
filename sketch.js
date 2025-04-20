@@ -41,6 +41,7 @@ let gravity = 0.2;
 // Todo make it easier to give speed for boats (based on dt instead of frames)
 // Todo make boat mantain the rotation it had when you sent it
 // Todo make the boats travel a lot more slowly in the water
+// Todo make boat accelerate towards mouse instead of sticking on mouse
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -94,9 +95,6 @@ function draw() {
     smallBoat.x += smallBoat.xSpeed;
     smallBoat.y += smallBoat.ySpeed;
 
-    // Debugging output
-    print(`xSpeed: ${smallBoat.xSpeed}, ySpeed: ${smallBoat.ySpeed}, x: ${smallBoat.x}, y: ${smallBoat.y}`);
-  
     // Draw the small boat
     push();
       translate(smallBoat.x, smallBoat.y);
