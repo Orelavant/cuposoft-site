@@ -14,10 +14,12 @@ let boatMinPitch = -0.55;
 let boatMaxPitch = 0.55;
 let smallBoatScalar = 0.3;
 let currentRotation = 0;
+let boatTopOffset = -50;
 let flagNoiseXOff;
 let flagNoiseYOff;
 let height;
 let dotArr;
+let boatYSinOffset;
 let smallBoatArr = [];
 let gravity = 0.2;
 // let friction;
@@ -41,7 +43,9 @@ let gravity = 0.2;
 // Todo make it easier to give speed for boats (based on dt instead of frames)
 // Todo make boat mantain the rotation it had when you sent it
 // Todo make the boats travel a lot more slowly in the water
+// Todo if released in the water, the boats should float to the top
 // Todo make boat accelerate towards mouse instead of sticking on mouse
+// Todo make the boats that collide with big boat shrink even more, and bob along a wave that's inside the cup
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -63,9 +67,6 @@ function draw() {
     boatX = -boatStartOffset;
   }
 
-  // Draw big boat
-  boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
-
   // Angle of small boat based on the diff between x positions
   let xDiff = mouseX - pmouseX
   let targetRotation = map(xDiff, -25, 25, -PI / 2, PI / 2)
@@ -84,6 +85,14 @@ function draw() {
     pop();
   }
 
+  // Draw big boat
+  boat(boatX, height, boatWidth, boatHeight, waveAccel, amplitude);
+
+  // Draw boats that have been released
+  drawReleasedBoats();
+}
+
+function drawReleasedBoats() {
   // Draw released small boats
   for (let i = 0; i < smallBoatArr.length; i++) {
     let smallBoat = smallBoatArr[i];
@@ -108,10 +117,18 @@ function draw() {
       i--;
     }
 
-    // Remove small boat if it collides with the big boat
-    if (smallBoat.x > boatX - boatStartOffset && smallBoat.x < boatX + boatWidth + boatEndOffset && smallBoat.y > height - boatHeight) {
-      smallBoatArr.splice(i, 1);
-      i--;
+    // If small boat collides with big boat, the small boat should then move alongside the big boat
+    if (
+      smallBoat.x + ((boatWidth * smallBoatScalar) / 2) > boatX - (boatWidth / 2) 
+      && smallBoat.x - ((boatWidth * smallBoatScalar) / 2) < boatX + (boatWidth / 2) 
+      && smallBoat.y > height + boatYSinOffset + boatTopOffset + -30
+    ) {
+      // Move small boat with big boat
+      smallBoat.x = boatX + ((boatWidth * smallBoatScalar) / 2);
+      smallBoat.y = height + boatYSinOffset + boatTopOffset - 10;
+      smallBoat.xSpeed = boatSpeed;
+      smallBoat.ySpeed = 0;
+      smallBoat.rotation = currentRotation;
     }
   }
 }
@@ -176,8 +193,7 @@ function drawSmallBoat(width, height) {
 
 function boat(x, y, width, height, waveAccel, amplitude) { 
   // vars
-  let sinHeight = sin((frameCount + x) * waveAccel) * amplitude;
-  let localHeight = -50;
+  boatYSinOffset = sin((frameCount + x) * waveAccel) * amplitude;
   let sinRotate = sin(((frameCount + x) * waveAccel) + PI / 2);
   let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
   let flagXOff = map(noise(flagNoiseXOff), 0, 1, -3, 3); 
@@ -190,7 +206,7 @@ function boat(x, y, width, height, waveAccel, amplitude) {
 
   push();
     // Translate the origin to the center of the semicircle
-    translate(x, y + sinHeight);
+    translate(x, y + boatYSinOffset);
 
     // Rotate boat
     rotate(sinRotateNorm);
@@ -207,11 +223,15 @@ function boat(x, y, width, height, waveAccel, amplitude) {
     line(width / 2 - 5, -50 + map(sinRotate, -1, 1, 0, -5), width / 2 - 5, -100);
 
     // Draw the cup hull
-    arc(0, localHeight, width, height, 0, PI);
+    arc(0, boatTopOffset, width, height, 0, PI);
     // Top lip
-    arc(0, localHeight, width, (height / 8) + sinRotate * 15, PI, 0);
+    arc(0, boatTopOffset, width, (height / 8) + sinRotate * 15, PI, 0);
+
+
+    // TODO Draw cup boats here
+
     // Bottom lip
-    arc(0, localHeight, width, (height / 8) + sinRotate * 15, 0, PI);
+    arc(0, boatTopOffset, width, (height / 8) + sinRotate * 15, 0, PI);
 
     // Draw the flag
     push();
