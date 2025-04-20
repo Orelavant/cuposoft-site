@@ -53,6 +53,7 @@ let gravity = 0.2;
 // Todo small boats should calculate their own small sin rotate norm so that they rotate independent of the big waves
 // Todo replace the cursor with wind particles
 // Todo make a progress bar that connects between the wave dots based off of how far the small boat traveled before landing in the big boat - once it fills up, a game icon pops out of the boat, that links to an itch.io game
+// Todo make clouds or wind pass by that you the small boats can also land on
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
