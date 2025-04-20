@@ -101,7 +101,7 @@ function draw() {
   }
 
   // Draw big boat
-  boat(boatX, height, boatWidth, boatHeight, waveAccel);
+  boat(boatX, height, boatWidth, boatHeight);
 
   // Draw boats that have been released
   drawReleasedBoats();
@@ -207,10 +207,8 @@ function drawSmallBoat(width, height) {
   pop();
 }
 
-function boat(x, y, width, height, waveAccel, amplitude) { 
-  // vars
-  let flagXOff = map(noise(flagNoiseXOff), 0, 1, -3, 3); 
-  let flagYOff = map(noise(flagNoiseYOff), 0, 1, -3, 3);
+function boat(x, y, width, height) { 
+  // Rotation
   if (sinRotateNorm < 0) {
     boatSpeed = max(0.2, boatSpeed - waveAccel * 1.5);
   } else if (sinRotateNorm > 0) {  
@@ -252,14 +250,6 @@ function boat(x, y, width, height, waveAccel, amplitude) {
       flagNoiseXOff += 0.01;
       flagNoiseYOff += 0.01;
       fill(255, 246, 211);
-
-      // Waving implementation
-      // Back flag
-      // line(-35 + flagXOff, -20 + flagYOff, 0, -25);
-      // Front flag
-      // triangle(0, 0, 0, -25, -35 + flagXOff, -15 + flagYOff);
-      // Connecting line
-      // line(-35 + flagXOff, -20 + flagYOff, -36 + flagXOff, -15 + flagYOff);
 
       // Back flag
       line(-35, -20, 0, -25);
