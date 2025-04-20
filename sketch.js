@@ -18,6 +18,8 @@ let flagNoiseXOff;
 let flagNoiseYOff;
 let height;
 let dotArr;
+let smallBoatArr = [];
+let gravity = 0.2;
 // let friction;
 // let frictionRate = 10;
 
@@ -36,6 +38,8 @@ let dotArr;
 // Todo the start and end of the screen for the wave should smoothly transition into one another
 // Todo cleanup code (make boat drawing 1 function)
 // Todo make the small boat rotate in the y direction as well
+// Todo make it easier to give speed for boats (based on dt instead of frames)
+// Todo make boat mantain the rotation it had when you sent it
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -68,27 +72,79 @@ function draw() {
   // Draw small boat at cursor
   if (mouseIsPressed) {
     push();
-      // Move to mouse location
+      // Accelerate towards mouse position with defined speed
       translate(mouseX, mouseY);
       currentRotation = currentRotation + (targetRotation - currentRotation) * 0.1
-      // print(currentRotation);
       rotate(currentRotation);
 
       // Draw boat
-      scale(smallBoatScalar);
-      strokeWeight(4);
-      smallBoat(boatWidth, boatHeight);
-      fill("black");
+      drawSmallBoat(boatWidth, boatHeight);
     pop();
+  }
+
+  // Draw released small boats
+  for (let i = 0; i < smallBoatArr.length; i++) {
+    let smallBoat = smallBoatArr[i];
+
+    // Update speed with gravity
+    smallBoat.ySpeed += gravity;
+  
+    // Update position
+    smallBoat.x += smallBoat.xSpeed;
+    smallBoat.y += smallBoat.ySpeed;
+
+    // Debugging output
+    print(`xSpeed: ${smallBoat.xSpeed}, ySpeed: ${smallBoat.ySpeed}, x: ${smallBoat.x}, y: ${smallBoat.y}`);
+  
+    // Draw the small boat
+    push();
+      translate(smallBoat.x, smallBoat.y);
+      rotate(smallBoat.rotation);
+      drawSmallBoat(boatWidth, boatHeight);
+    pop();
+
+    // Remove small boat if it goes off screen
+    if (smallBoat.x > windowWidth + boatEndOffset || smallBoat.y > windowHeight + boatEndOffset) {
+      smallBoatArr.splice(i, 1);
+      i--;
+    }
+
+    // Remove small boat if it collides with the big boat
+    if (smallBoat.x > boatX - boatStartOffset && smallBoat.x < boatX + boatWidth + boatEndOffset && smallBoat.y > height - boatHeight) {
+      smallBoatArr.splice(i, 1);
+      i--;
+    }
   }
 }
 
-function smallBoat(width, height) {
-  // Offset from mouse so that the mouse is at the flag point
-  translate(-50, 60);
+function mouseReleased() {
+  // Send smallBoat flying based on the movement of the mouse
+  let xDiff = mouseX - pmouseX
+  let yDiff = mouseY - pmouseY
+  let posDiff = sqrt(xDiff ** 2 + yDiff ** 2);
+  let smallBoatSpeed = posDiff / 2;
+  smallBoatSpeed = constrain(smallBoatSpeed, 0, 10);
+  let angle = atan2(yDiff, xDiff);
+  let xSpeed = cos(angle) * smallBoatSpeed;
+  let ySpeed = sin(angle) * smallBoatSpeed;
+  let rotation = 0;
+
+
+  // Add small boat to array
+  let boat = {"x": mouseX, "y": mouseY, "xSpeed": xSpeed, "ySpeed": ySpeed, "rotation": rotation};
+  smallBoatArr.push(boat);
+}
+
+
+function drawSmallBoat(width, height) {
   push();
+    // Offset from mouse so that the mouse is at the flag point
+    scale(smallBoatScalar);
+    translate(-50, 60);
+
     // Set pencil
     fill(255, 246, 211);
+    strokeWeight(4);
     stroke(0);
 
     // Draw the flag pole
@@ -115,6 +171,7 @@ function smallBoat(width, height) {
       triangle(0, 0, 0, -25, -35,  -15);
       // Connecting line
       line(-35, -20, -36, -15);
+    pop();
   pop();
 }
 
