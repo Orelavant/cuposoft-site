@@ -53,6 +53,7 @@ let beige;
 // Todo improve the rotation and xOffset of the small boats inside the big boat
 // Todo improve the transition between released boat and boat boat so it's more smooth (lerp to target position)
 // Todo make boats not lie on top of each other when in big boat
+// Todo make the sin motion of the small boats inside the big boat more wave like
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
