@@ -137,7 +137,6 @@ function drawReleasedBoats() {
       && smallBoat.y > height + boatYSinOffset + boatTopOffset + -30
       && smallBoat.y < height + boatYSinOffset + boatTopOffset + 30
     ) {
-      smallBoat.x = (boatWidth * smallBoatScalar) / 2;
       smallBoat.xSpeed = boatSpeed;
       smallBoat.ySpeed = 0;
       
@@ -156,20 +155,17 @@ function drawBoatBoats() {
     let smallBoat = boatBoats[i];
 
     // Update rotation
-    let sinOffset = sin(frameCount * 0.02) * smallAmplitude;
+    let sinOffset = sin((frameCount + smallBoat.x) * 0.02) * smallAmplitude;
     let xSinOffset = map(sinOffset, -1, 1, 7, 12);
-    let ySinOffset = sin(frameCount * 0.02) * smallAmplitude;
-    let sinRotate = sin((frameCount * 0.02) + PI / 2);
+    let ySinOffset = sin((frameCount + smallBoat.x) * 0.02) * smallAmplitude;
+    let sinRotate = sin(((frameCount + smallBoat.x) * 0.02) + PI / 2);
     let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
     smallBoat.rotation = sinRotateNorm;
 
     // Draw the small boat
     push();
-      translate(smallBoat.x, smallBoat.y);
-
       // Update position
-      smallBoat.x = xSinOffset;
-      smallBoat.y = ySinOffset + boatTopOffset - 20;
+      translate(xSinOffset, ySinOffset + boatTopOffset - 20);
 
       rotate(smallBoat.rotation);
 
