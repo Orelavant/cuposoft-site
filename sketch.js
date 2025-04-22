@@ -58,6 +58,7 @@ let cursorBoatY = 0;
 // Todo make boats not lie on top of each other when in big boat
 // Todo make the sin motion of the small boats inside the big boat more wave like
 // Todo draw dots inside the cup
+// Todo fix boat release to be from where the cursor boat is, not the mouse
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
