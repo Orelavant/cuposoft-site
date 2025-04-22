@@ -17,19 +17,15 @@ let smallBoatScalar = 0.3;
 let currentRotation = 0;
 let boatTopOffset = -50;
 let boatYSinOffset;
-let smallBoatYSinOffset;
-let sinRotate;
-let sinRotateNorm;
-let smallSinRotate;
-let smallSinRotateNorm;
 let flagNoiseXOff;
 let flagNoiseYOff;
 let height;
 let dotArr;
-let smallBoatArr = [];
+let releasedBoats = [];
+let boatBoats = [];
 let gravity = 0.2;
+let beige;
 
-// Todo make the wave interactible?
 // Todo make the rotation of the boat dependent on the nearest set of points?
 // Todo make the amplitude vary over time, which means you need to track the amplitude of individual dots
 // Todo make the boat accel and decel based of a wave instead of linear
@@ -42,7 +38,7 @@ let gravity = 0.2;
 // Todo the particles could stay inside and splash around inside the cup
 // The particles you throw could be minuature boats, and if they don't make it inside the cup, they sink down and dissapear offscreen
 // Todo the start and end of the screen for the wave should smoothly transition into one another
-// Todo cleanup code (make boat drawing 1 function)
+// Todo cleanup code (make boat drawing more modular)
 // Todo make the small boat rotate in the y direction as well
 // Todo make it easier to give speed for boats (based on dt instead of frames)
 // Todo make boat mantain the rotation it had when you sent it
@@ -54,6 +50,9 @@ let gravity = 0.2;
 // Todo replace the cursor with wind particles
 // Todo make a progress bar that connects between the wave dots based off of how far the small boat traveled before landing in the big boat - once it fills up, a game icon pops out of the boat, that links to an itch.io game
 // Todo make clouds or wind pass by that you the small boats can also land on
+// Todo improve the rotation and xOffset of the small boats inside the big boat
+// Todo improve the transition between released boat and boat boat so it's more smooth (lerp to target position)
+// Todo make boats not lie on top of each other when in big boat
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -61,10 +60,11 @@ function init() {
   dotArr = createDotArr(numberOfDots, height, diameter);
   flagNoiseXOff = random(10000);
   flagNoiseYOff = random(10000);
+  beige = color(255, 246, 211);
 }
 
 function draw() {
-  background(255, 246, 211);
+  background(beige);
 
   // Draw wave
   wave(dotArr, waveAccel, amplitude);
@@ -76,11 +76,6 @@ function draw() {
   }
 
   boatYSinOffset = sin((frameCount + boatX) * waveAccel) * amplitude;
-  smallBoatYSinOffset = sin((frameCount + boatX) * waveAccel) * smallAmplitude;
-  sinRotate = sin(((frameCount + boatX) * waveAccel) + PI / 2);
-  sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
-  smallSinRotate = sin(((frameCount + boatX) * waveAccel) + PI / 2);
-  smallSinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
 
   // Angle of small boat based on the diff between x positions
   let xDiff = mouseX - pmouseX
@@ -96,21 +91,23 @@ function draw() {
       rotate(currentRotation);
 
       // Draw boat
-      drawSmallBoat(boatWidth, boatHeight);
+      drawSmallBoat(boatWidth, boatHeight, 0.25);
     pop();
   }
 
   // Draw big boat
-  boat(boatX, height, boatWidth, boatHeight);
+  let sinRotate = sin(((frameCount + boatX) * waveAccel) + PI / 2);
+  drawBigBoat(boatX, height, boatWidth, boatHeight, sinRotate);
 
   // Draw boats that have been released
   drawReleasedBoats();
+
 }
 
 function drawReleasedBoats() {
   // Draw released small boats
-  for (let i = 0; i < smallBoatArr.length; i++) {
-    let smallBoat = smallBoatArr[i];
+  for (let i = 0; i < releasedBoats.length; i++) {
+    let smallBoat = releasedBoats[i];
 
     // Update speed with gravity
     smallBoat.ySpeed += gravity;
@@ -123,12 +120,12 @@ function drawReleasedBoats() {
     push();
       translate(smallBoat.x, smallBoat.y);
       rotate(smallBoat.rotation);
-      drawSmallBoat(boatWidth, boatHeight);
+      drawSmallBoat(boatWidth, boatHeight, 0.25);
     pop();
 
     // Remove small boat if it goes off screen
     if (smallBoat.x > windowWidth + boatEndOffset || smallBoat.y > windowHeight + boatEndOffset) {
-      smallBoatArr.splice(i, 1);
+      releasedBoats.splice(i, 1);
       i--;
     }
 
@@ -139,13 +136,44 @@ function drawReleasedBoats() {
       && smallBoat.y > height + boatYSinOffset + boatTopOffset + -30
       && smallBoat.y < height + boatYSinOffset + boatTopOffset + 30
     ) {
-      // Move small boat with big boat
-      smallBoat.x = boatX + ((boatWidth * smallBoatScalar) / 2);
-      smallBoat.y = height + + smallBoatYSinOffset + boatYSinOffset + boatTopOffset - 20;
+      smallBoat.x = (boatWidth * smallBoatScalar) / 2;
       smallBoat.xSpeed = boatSpeed;
       smallBoat.ySpeed = 0;
-      smallBoat.rotation = smallSinRotateNorm;
+      
+      // Add to boat boats
+      boatBoats.push(smallBoat);
+
+      // Remove from released boats
+      releasedBoats.splice(i, 1);
+      i--;
     }
+  }
+}
+
+function drawBoatBoats() {
+  for (let i = 0; i < boatBoats.length; i++) {
+    let smallBoat = boatBoats[i];
+
+    // Update rotation
+    let sinOffset = sin(frameCount * 0.02) * smallAmplitude;
+    let xSinOffset = map(sinOffset, -1, 1, 7, 12);
+    let ySinOffset = sin(frameCount * 0.02) * smallAmplitude;
+    let sinRotate = sin((frameCount * 0.02) + PI / 2);
+    let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
+    smallBoat.rotation = sinRotateNorm;
+
+    // Draw the small boat
+    push();
+      translate(smallBoat.x, smallBoat.y);
+
+      // Update position
+      smallBoat.x = xSinOffset;
+      smallBoat.y = ySinOffset + boatTopOffset - 20;
+
+      rotate(smallBoat.rotation);
+
+      drawSmallBoat(boatWidth, boatHeight, sinRotate);
+    pop();
   }
 }
 
@@ -161,21 +189,20 @@ function mouseReleased() {
   let ySpeed = sin(angle) * smallBoatSpeed;
   let rotation = 0;
 
-
   // Add small boat to array
   let boat = {"x": mouseX, "y": mouseY, "xSpeed": xSpeed, "ySpeed": ySpeed, "rotation": rotation};
-  smallBoatArr.push(boat);
+  releasedBoats.push(boat);
 }
 
 
-function drawSmallBoat(width, height) {
+function drawSmallBoat(width, height, sinRotate) {
   push();
     // Offset from mouse so that the mouse is at the flag point
     scale(smallBoatScalar);
     translate(-50, 60);
 
     // Set pencil
-    fill(255, 246, 211);
+    fill(beige);
     strokeWeight(4);
     stroke(0);
 
@@ -183,19 +210,19 @@ function drawSmallBoat(width, height) {
     // Far pole
     line(width / 2, -50, width / 2, 0);
     // Near pole
-    line(width / 2 - 5, -50, width / 2 - 5, 0);
+    line(width / 2 - 5, -50 + map(sinRotate, -1, 1, 0, -5), width / 2 - 5, 0);
 
     // Draw the cup hull
     arc(0, 0, width, height, 0, PI);
     // Top lip
-    arc(0, 0, width, (height / 8), PI, 0);
+    arc(0, 0, width, (height / 8) + sinRotate * 15, PI, 0);
     // Bottom lip
-    arc(0, 0, width, (height / 8), 0, PI);
+    arc(0, 0, width, (height / 8) + sinRotate * 15, 0, PI);
 
     // Draw the flag
     push();
       translate(width / 2, -35);
-      fill(255, 246, 211);
+      fill(beige);
 
       // Back flag
       line(-35, -20, 0, -25);
@@ -207,8 +234,9 @@ function drawSmallBoat(width, height) {
   pop();
 }
 
-function boat(x, y, width, height) { 
+function drawBigBoat(x, y, width, height, sinRotate) { 
   // Rotation
+  let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
   if (sinRotateNorm < 0) {
     boatSpeed = max(0.2, boatSpeed - waveAccel * 1.5);
   } else if (sinRotateNorm > 0) {  
@@ -223,7 +251,7 @@ function boat(x, y, width, height) {
     rotate(sinRotateNorm);
 
     // Set pencil
-    fill(255, 246, 211);
+    fill(beige);
     stroke(0);
     strokeWeight(2);
 
@@ -234,22 +262,29 @@ function boat(x, y, width, height) {
     line(width / 2 - 5, -50 + map(sinRotate, -1, 1, 0, -5), width / 2 - 5, -100);
 
     // Draw the cup hull
-    arc(0, boatTopOffset, width, height, 0, PI);
+    noFill();
+
     // Top lip
     arc(0, boatTopOffset, width, (height / 8) + sinRotate * 15, PI, 0);
 
+    // Draw boats inside this boat here
+    drawBoatBoats();
 
-    // TODO Draw cup boats here
-
+    // Fill space between hull bottom and bottom lip
+    drawFilledArcSpace(0, boatTopOffset, width, height, (height / 8) + sinRotate * 15, 0, PI, beige);
+    // Hull bottom
+    arc(0, boatTopOffset, width, height, 0, PI);
     // Bottom lip
     arc(0, boatTopOffset, width, (height / 8) + sinRotate * 15, 0, PI);
+
+    fill(beige);
 
     // Draw the flag
     push();
       translate(width / 2, -80);
       flagNoiseXOff += 0.01;
       flagNoiseYOff += 0.01;
-      fill(255, 246, 211);
+      fill(beige);
 
       // Back flag
       line(-35, -20, 0, -25);
@@ -270,6 +305,33 @@ function createDotArr(numberOfDots, y, diameter) {
   }
 
   return dotArr;
+}
+
+function drawFilledArcSpace(x, y, width, height, innerHeight, startAngle, endAngle, color) {
+  push();
+    translate(x, y);
+
+    // Begin custom shape
+    beginShape();
+    noStroke();
+    fill(color); // Example fill color
+
+    // Add vertices for the outer arc
+    for (let angle = startAngle; angle <= endAngle; angle += 0.1) {
+      let outerX = cos(angle) * (width / 2);
+      let outerY = sin(angle) * (height / 2);
+      vertex(outerX, outerY);
+    }
+
+    // Add vertices for the inner arc (in reverse order)
+    for (let angle = endAngle; angle >= startAngle; angle -= 0.1) {
+      let innerX = cos(angle) * (width / 2);
+      let innerY = sin(angle) * (innerHeight / 2);
+      vertex(innerX, innerY);
+    }
+
+    endShape(CLOSE); // Close the shape
+  pop();
 }
 
 function dots(dotArr) {
