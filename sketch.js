@@ -25,6 +25,9 @@ let releasedBoats = [];
 let boatBoats = [];
 let gravity = 0.2;
 let beige;
+let cursorBoatX = 0;
+let pcursorBoatX = 0;
+let cursorBoatY = 0;
 
 // Todo make the rotation of the boat dependent on the nearest set of points?
 // Todo make the amplitude vary over time, which means you need to track the amplitude of individual dots
@@ -54,6 +57,7 @@ let beige;
 // Todo improve the transition between released boat and boat boat so it's more smooth (lerp to target position)
 // Todo make boats not lie on top of each other when in big boat
 // Todo make the sin motion of the small boats inside the big boat more wave like
+// Todo draw dots inside the cup
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -78,16 +82,27 @@ function draw() {
 
   boatYSinOffset = sin((frameCount + boatX) * waveAccel) * amplitude;
 
-  // Angle of small boat based on the diff between x positions
-  let xDiff = mouseX - pmouseX
-  let targetRotation = map(xDiff, -25, 25, -PI / 2, PI / 2)
-  targetRotation = constrain(targetRotation, -PI / 2, PI / 2);
 
   // Draw small boat at cursor
   if (mouseIsPressed) {
+    // Move towards mouse
+    let xDiff = mouseX - cursorBoatX;
+    let yDiff = mouseY - cursorBoatY;
+    let posDiff = sqrt(xDiff ** 2 + yDiff ** 2);
+    let cursorBoatSpeed = posDiff / 2;
+    cursorBoatSpeed = constrain(cursorBoatSpeed, 0, 10);
+    let angle = atan2(yDiff, xDiff);
+    pcursorBoatX = cursorBoatX;
+    cursorBoatX += cos(angle) * cursorBoatSpeed;
+    cursorBoatY += sin(angle) * cursorBoatSpeed;
+
+    // Angle of small boat based on the diff between x positions
+    let targetRotation = map(cursorBoatX - pcursorBoatX, -25, 25, -PI / 2, PI / 2)
+    targetRotation = constrain(targetRotation, -PI / 2, PI / 2);
     push();
-      // Accelerate towards mouse position with defined speed
-      translate(mouseX, mouseY);
+
+
+      translate(cursorBoatX, cursorBoatY);
       currentRotation = currentRotation + (targetRotation - currentRotation) * 0.1
       rotate(currentRotation);
 
@@ -189,6 +204,10 @@ function mouseReleased() {
   // Add small boat to array
   let boat = {"x": mouseX, "y": mouseY, "xSpeed": xSpeed, "ySpeed": ySpeed, "rotation": rotation};
   releasedBoats.push(boat);
+
+  // Reset cursorBoatPosition
+  cursorBoatX = boatX;
+  cursorBoatY = height;
 }
 
 
