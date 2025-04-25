@@ -23,12 +23,14 @@ let height;
 let dotArr;
 let releasedBoats = [];
 let boatBoats = [];
-let gravity = 0.5;
+let airGravity = 0.5;
+let waterGravity = 0.1;
 let beige;
 let cursorBoatPos;
+let cursorBoatVel;
 let pcursorBoatPos;
 let cursorBoatSpeedScalar;
-let cursorBoatMaxMag = 20;
+let cursorBoatMaxMag;
 
 // Todo make the rotation of the boat dependent on the nearest set of points?
 // Todo make the amplitude vary over time, which means you need to track the amplitude of individual dots
@@ -61,6 +63,8 @@ let cursorBoatMaxMag = 20;
 // Todo draw dots inside the cup
 // Todo fix boat release to be from where the cursor boat is, not the mouse
 // Todo zoom in to reset the scene, like zooming in on a boat
+// Todo make water to air transition smoother, make the small boat movement smoother in general
+// Todo lose all accumulated air gravity when small boat hits water
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -99,8 +103,10 @@ function draw() {
     let dotIndex = floor(cursorBoatPos.x / (windowWidth / numberOfDots));
     if (cursorBoatPos.y >= dotArr[dotIndex].y) {
       cursorBoatSpeedScalar = 0.04;
+      cursorBoatMaxMag = 10;
     } else {
-      cursorBoatSpeedScalar = 0.09;
+      cursorBoatSpeedScalar = 0.06;
+      cursorBoatMaxMag = 20;
     }
 
     // Update cursorBoatVel based on diff between cursorBoatPos and mousePos
@@ -148,8 +154,16 @@ function drawReleasedBoats() {
   for (let i = 0; i < releasedBoats.length; i++) {
     let smallBoat = releasedBoats[i];
 
-    // Update gravity
-    smallBoat.vel.y += gravity;
+    // Travel slower if in the water
+    let dotIndex = floor(smallBoat.pos.x / (windowWidth / numberOfDots));
+    if (dotIndex >= 0 && dotIndex < dotArr.length) {
+      // Travel slower if in the water
+      if (smallBoat.pos.y >= dotArr[dotIndex].y) { 
+        smallBoat.vel.y += waterGravity;
+      } else {
+        smallBoat.vel.y += airGravity;
+      }
+    }
   
     // Update position
     smallBoat.pos = smallBoat.pos.add(smallBoat.vel);
@@ -167,12 +181,18 @@ function drawReleasedBoats() {
       i--;
     }
 
+    // Check if small boat is above big boat just in the y axis 
+    if (smallBoat.pos.y < height + boatYSinOffset + boatTopOffset - 30) {
+      smallBoat.aboveBoat = true;
+    }
+
     // If small boat collides with big boat, the small boat should then move alongside the big boat
     if (
       smallBoat.pos.x + ((boatWidth * smallBoatScalar) / 2) > boatX - (boatWidth / 2) 
       && smallBoat.pos.x - ((boatWidth * smallBoatScalar) / 2) < boatX + (boatWidth / 2) 
-      && smallBoat.pos.y > height + boatYSinOffset + boatTopOffset + -30
+      && smallBoat.pos.y >= height + boatYSinOffset + boatTopOffset
       && smallBoat.pos.y < height + boatYSinOffset + boatTopOffset + 30
+      && smallBoat.aboveBoat
     ) {
       smallBoat.pos.xSpeed = boatSpeed;
       smallBoat.pos.ySpeed = 0;
