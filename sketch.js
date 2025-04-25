@@ -14,7 +14,7 @@ let boatX = -boatStartOffset;
 let boatMinPitch = -0.55;
 let boatMaxPitch = 0.55;
 let smallBoatScalar = 0.3;
-let currentRotation = 0;
+let cursorBoatRotation = 0;
 let boatTopOffset = -50;
 let boatYSinOffset;
 let flagNoiseXOff;
@@ -23,11 +23,12 @@ let height;
 let dotArr;
 let releasedBoats = [];
 let boatBoats = [];
-let gravity = 0.2;
+let gravity = 0.5;
 let beige;
-let cursorBoatX = 0;
-let pcursorBoatX = 0;
-let cursorBoatY = 0;
+let cursorBoatPos;
+let pcursorBoatPos;
+let cursorBoatSpeedScalar;
+let cursorBoatMaxMag = 20;
 
 // Todo make the rotation of the boat dependent on the nearest set of points?
 // Todo make the amplitude vary over time, which means you need to track the amplitude of individual dots
@@ -59,6 +60,7 @@ let cursorBoatY = 0;
 // Todo make the sin motion of the small boats inside the big boat more wave like
 // Todo draw dots inside the cup
 // Todo fix boat release to be from where the cursor boat is, not the mouse
+// Todo zoom in to reset the scene, like zooming in on a boat
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -67,6 +69,7 @@ function init() {
   flagNoiseXOff = random(10000);
   flagNoiseYOff = random(10000);
   beige = color(255, 246, 211);
+  cursorBoatPos = createVector(0, 0);
 }
 
 function draw() {
@@ -83,33 +86,46 @@ function draw() {
 
   boatYSinOffset = sin((frameCount + boatX) * waveAccel) * amplitude;
 
-
   // Draw small boat at cursor
-  if (mouseIsPressed) {
-    // Move towards mouse
-    let xDiff = mouseX - cursorBoatX;
-    let yDiff = mouseY - cursorBoatY;
-    let posDiff = sqrt(xDiff ** 2 + yDiff ** 2);
-    let cursorBoatSpeed = posDiff / 2;
-    cursorBoatSpeed = constrain(cursorBoatSpeed, 0, 10);
-    let angle = atan2(yDiff, xDiff);
-    pcursorBoatX = cursorBoatX;
-    cursorBoatX += cos(angle) * cursorBoatSpeed;
-    cursorBoatY += sin(angle) * cursorBoatSpeed;
+  if (mouseIsPressed && mouseButton === LEFT) {
+    // Create vectors for the cursor boat and the mouse position
+    let mousePos = createVector(mouseX, mouseY);
+    pcursorBoatPos = cursorBoatPos.copy();
+
+    // Travel a little bit towards the mouse position
+    let posDiff = p5.Vector.sub(mousePos, cursorBoatPos);
+
+    // Travel slower if in the water
+    let dotIndex = floor(cursorBoatPos.x / (windowWidth / numberOfDots));
+    if (cursorBoatPos.y >= dotArr[dotIndex].y) {
+      cursorBoatSpeedScalar = 0.04;
+    } else {
+      cursorBoatSpeedScalar = 0.09;
+    }
+
+    // Update cursorBoatVel based on diff between cursorBoatPos and mousePos
+    cursorBoatVel = posDiff.copy().mult(cursorBoatSpeedScalar);
+    if (cursorBoatVel.mag() > cursorBoatMaxMag) {
+      cursorBoatVel.setMag(cursorBoatMaxMag);
+    };
+    print(cursorBoatVel.mag());
+    cursorBoatPos.add(cursorBoatVel);
+
 
     // Angle of small boat based on the diff between x positions
-    let targetRotation = map(cursorBoatX - pcursorBoatX, -25, 25, -PI / 2, PI / 2)
+    let targetRotation = map(cursorBoatPos.x - pcursorBoatPos.x, -25, 25, -PI / 2, PI / 2)
     targetRotation = constrain(targetRotation, -PI / 2, PI / 2);
     push();
-
-
-      translate(cursorBoatX, cursorBoatY);
-      currentRotation = currentRotation + (targetRotation - currentRotation) * 0.1
-      rotate(currentRotation);
+      translate(cursorBoatPos);
+      cursorBoatRotation = cursorBoatRotation + (targetRotation - cursorBoatRotation) * 0.1
+      rotate(cursorBoatRotation);
 
       // Draw boat
       drawSmallBoat(boatWidth, boatHeight, 0.25);
     pop();
+  } else {
+    // Reset cursorBoatPosition
+    cursorBoatPos = createVector(mouseX, windowHeight);
   }
 
   // Draw big boat
@@ -118,43 +134,48 @@ function draw() {
 
   // Draw boats that have been released
   drawReleasedBoats();
-
 }
+
+function mouseReleased() {
+  // Add small boat to array
+  let boat = {"pos": cursorBoatPos.copy(), "vel": cursorBoatVel.copy(), "rotation": cursorBoatRotation};
+  releasedBoats.push(boat);
+}
+
 
 function drawReleasedBoats() {
   // Draw released small boats
   for (let i = 0; i < releasedBoats.length; i++) {
     let smallBoat = releasedBoats[i];
 
-    // Update speed with gravity
-    smallBoat.ySpeed += gravity;
+    // Update gravity
+    smallBoat.vel.y += gravity;
   
     // Update position
-    smallBoat.x += smallBoat.xSpeed;
-    smallBoat.y += smallBoat.ySpeed;
+    smallBoat.pos = smallBoat.pos.add(smallBoat.vel);
 
     // Draw the small boat
     push();
-      translate(smallBoat.x, smallBoat.y);
+      translate(smallBoat.pos);
       rotate(smallBoat.rotation);
       drawSmallBoat(boatWidth, boatHeight, 0.25);
     pop();
 
     // Remove small boat if it goes off screen
-    if (smallBoat.x > windowWidth + boatEndOffset || smallBoat.y > windowHeight + boatEndOffset) {
+    if (smallBoat.pos.x > windowWidth + boatEndOffset || smallBoat.pos.y > windowHeight + boatEndOffset) {
       releasedBoats.splice(i, 1);
       i--;
     }
 
     // If small boat collides with big boat, the small boat should then move alongside the big boat
     if (
-      smallBoat.x + ((boatWidth * smallBoatScalar) / 2) > boatX - (boatWidth / 2) 
-      && smallBoat.x - ((boatWidth * smallBoatScalar) / 2) < boatX + (boatWidth / 2) 
-      && smallBoat.y > height + boatYSinOffset + boatTopOffset + -30
-      && smallBoat.y < height + boatYSinOffset + boatTopOffset + 30
+      smallBoat.pos.x + ((boatWidth * smallBoatScalar) / 2) > boatX - (boatWidth / 2) 
+      && smallBoat.pos.x - ((boatWidth * smallBoatScalar) / 2) < boatX + (boatWidth / 2) 
+      && smallBoat.pos.y > height + boatYSinOffset + boatTopOffset + -30
+      && smallBoat.pos.y < height + boatYSinOffset + boatTopOffset + 30
     ) {
-      smallBoat.xSpeed = boatSpeed;
-      smallBoat.ySpeed = 0;
+      smallBoat.pos.xSpeed = boatSpeed;
+      smallBoat.pos.ySpeed = 0;
       
       // Add to boat boats
       boatBoats.push(smallBoat);
@@ -171,10 +192,10 @@ function drawBoatBoats() {
     let smallBoat = boatBoats[i];
 
     // Update rotation
-    let sinOffset = sin((frameCount + smallBoat.x) * 0.02) * smallAmplitude;
+    let sinOffset = sin((frameCount + smallBoat.pos.x) * 0.02) * smallAmplitude;
     let xSinOffset = map(sinOffset, -1, 1, 7, 12);
-    let ySinOffset = sin((frameCount + smallBoat.x) * 0.02) * smallAmplitude;
-    let sinRotate = sin(((frameCount + smallBoat.x) * 0.02) + PI / 2);
+    let ySinOffset = sin((frameCount + smallBoat.pos.x) * 0.02) * smallAmplitude;
+    let sinRotate = sin(((frameCount + smallBoat.pos.x) * 0.02) + PI / 2);
     let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
     smallBoat.rotation = sinRotateNorm;
 
@@ -189,28 +210,6 @@ function drawBoatBoats() {
     pop();
   }
 }
-
-function mouseReleased() {
-  // Send smallBoat flying based on the movement of the mouse
-  let xDiff = mouseX - pmouseX
-  let yDiff = mouseY - pmouseY
-  let posDiff = sqrt(xDiff ** 2 + yDiff ** 2);
-  let smallBoatSpeed = posDiff / 2;
-  smallBoatSpeed = constrain(smallBoatSpeed, 0, 10);
-  let angle = atan2(yDiff, xDiff);
-  let xSpeed = cos(angle) * smallBoatSpeed;
-  let ySpeed = sin(angle) * smallBoatSpeed;
-  let rotation = 0;
-
-  // Add small boat to array
-  let boat = {"x": mouseX, "y": mouseY, "xSpeed": xSpeed, "ySpeed": ySpeed, "rotation": rotation};
-  releasedBoats.push(boat);
-
-  // Reset cursorBoatPosition
-  cursorBoatX = boatX;
-  cursorBoatY = height;
-}
-
 
 function drawSmallBoat(width, height, sinRotate) {
   push();
@@ -367,6 +366,7 @@ function wave(dotArr, waveAccel, amplitude) {
 
     // point 1 for line
     let sinValue = sin((frameCount + dot.x) * waveAccel) * amplitude;
+    dot.y = height + sinValue;
 
     // point 2 for line
     let x1 = windowWidth / numberOfDots * (i + 1);
@@ -376,7 +376,7 @@ function wave(dotArr, waveAccel, amplitude) {
     fill("black");
     noStroke();
     strokeWeight(2);
-    circle(dot.x, dot.y + sinValue, dot.d);
+    circle(dot.x, dot.y, dot.d);
 
     // draw line
     // strokeWeight(6);
