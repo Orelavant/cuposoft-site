@@ -65,6 +65,9 @@ let cursorBoatMaxMag;
 // Todo zoom in to reset the scene, like zooming in on a boat
 // Todo make water to air transition smoother, make the small boat movement smoother in general
 // Todo lose all accumulated air gravity when small boat hits water
+// Todo when you release - points start accumulating (line draws on wave), and if it lands in the big boat, the line remains, otherwise it deletes
+// Todo have a way to track the player's longest line (maybe like a spiral in the top right corner?) and if the spiral grows until it touches a certain point, then reward the player for that
+// Todo also make a challenge for how many boats the player can get in before the big boat moves on
 function init() {
   createCanvas(windowWidth, windowHeight);
   height = windowHeight / heightDivisor;
@@ -91,7 +94,7 @@ function draw() {
   boatYSinOffset = sin((frameCount + boatX) * waveAccel) * amplitude;
 
   // Draw small boat at cursor
-  if (mouseIsPressed && mouseButton === LEFT) {
+  if (mouseIsPressed && mouseButton === "left") {
     // Create vectors for the cursor boat and the mouse position
     let mousePos = createVector(mouseX, mouseY);
     pcursorBoatPos = cursorBoatPos.copy();
@@ -114,7 +117,6 @@ function draw() {
     if (cursorBoatVel.mag() > cursorBoatMaxMag) {
       cursorBoatVel.setMag(cursorBoatMaxMag);
     };
-    print(cursorBoatVel.mag());
     cursorBoatPos.add(cursorBoatVel);
 
 
@@ -191,11 +193,15 @@ function drawReleasedBoats() {
       smallBoat.pos.x + ((boatWidth * smallBoatScalar) / 2) > boatX - (boatWidth / 2) 
       && smallBoat.pos.x - ((boatWidth * smallBoatScalar) / 2) < boatX + (boatWidth / 2) 
       && smallBoat.pos.y >= height + boatYSinOffset + boatTopOffset
-      && smallBoat.pos.y < height + boatYSinOffset + boatTopOffset + 30
+      && smallBoat.pos.y < height + boatYSinOffset + boatTopOffset + 20
       && smallBoat.aboveBoat
     ) {
       smallBoat.pos.xSpeed = boatSpeed;
       smallBoat.pos.ySpeed = 0;
+      let minXOffset = -(boatWidth / 3) + (boatWidth * smallBoatScalar);
+      let maxXOffset = (boatWidth / 2) - ((boatWidth / 2) * smallBoatScalar);
+      smallBoat.xOffset = smallBoat.pos.x - boatX;
+      smallBoat.xOffset = constrain(smallBoat.xOffset, minXOffset, maxXOffset);
       
       // Add to boat boats
       boatBoats.push(smallBoat);
@@ -212,8 +218,6 @@ function drawBoatBoats() {
     let smallBoat = boatBoats[i];
 
     // Update rotation
-    let sinOffset = sin((frameCount + smallBoat.pos.x) * 0.02) * smallAmplitude;
-    let xSinOffset = map(sinOffset, -1, 1, 7, 12);
     let ySinOffset = sin((frameCount + smallBoat.pos.x) * 0.02) * smallAmplitude;
     let sinRotate = sin(((frameCount + smallBoat.pos.x) * 0.02) + PI / 2);
     let sinRotateNorm = map(sinRotate, -1, 1, boatMinPitch, boatMaxPitch);
@@ -222,7 +226,7 @@ function drawBoatBoats() {
     // Draw the small boat
     push();
       // Update position
-      translate(xSinOffset, ySinOffset + boatTopOffset - 20);
+      translate(smallBoat.xOffset, ySinOffset + boatTopOffset - 10);
 
       rotate(smallBoat.rotation);
 
